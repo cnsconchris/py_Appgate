@@ -1,3 +1,11 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Feb 23 20:01:25 2024
+
+@author: chris
+"""
+
 # %%
 import requests
 import json

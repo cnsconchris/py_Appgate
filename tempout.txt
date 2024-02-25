@@ -1,0 +1,95 @@
+import json
+import socketserver
+import sys
+import os
+
+import requests
+
+# edit the values below
+CONTROLLER_URL = "https://controller1.company.com:8443"
+ CA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "ca.pem")
+ 
+ PROVIDER = "local"
+ USERNAME = "username"
+ PASSWORD = "password"
+ 
+ # do not edit anything below
+ LISTEN_HOST, LISTEN_PORT = "127.0.0.1", 5140
+ 
+ 
+ class SyslogHandler(socketserver.BaseRequestHandler):
+  def handle(self):
+     data = bytes.decode(self.request[0].strip())
+ 
+    if len(data) == 0:
+       print("zero len message received")
+      return
+ 
+     # parse to json
+     jlog = json.loads(data)
+ 
+     # print(jlog["event_type"] + " received")
+ 
+    if jlog["event_type"] == "ip_access" and jlog["action"] == "alert":
+       dn = jlog["distinguished_name"]
+       print(f"ALERT received for {dn}")
+       blacklist_user(dn)
+       revoke_tokens(dn)
+    else:
+       # print("skipping " + jlog["event_type"])
+      pass
+ 
+ 
+ def login():
+   headers = {"Accept": "application/vnd.appgate.peer-v16+json",
+              "Content-Type": "application/json"}
+ 
+   # authenticate
+   data = {"machineId": "f0031c00-0522-43b3-a642-ae23cfd1bc22",
+          "providerName": PROVIDER, "username": USERNAME, "password": PASSWORD}
+ 
+   res = requests.post(f"{CONTROLLER_URL}/admin/login",
+                       verify=CA_PATH, headers=headers, data=json.dumps(data), timeout=5)
+ 
+  if res.status_code != 200:
+     print(f"CONTROLLER_URL login failed with http {str(res.status_code)}")
+     sys.exit(-1)
+ 
+   token = json.loads(res.text)["token"]
+   headers["Authorization"] = f"Bearer {token}"
+ 
+  return headers
+ 
+ 
+ def blacklist_user(dn):
+   auth_headers = login()
+ 
+   # dn without deviceid
+   user_dn = dn.split(",", 1)[1]
+   data = {"userDistinguishedName": user_dn, "reason": "suspicious traffic"}
+ 
+   res = requests.post(f"{CONTROLLER_URL}/admin/blacklist",
+                       data=json.dumps(data), verify=CA_PATH, headers=auth_headers)
+ 
+   print(f"{user_dn} blacklisted {str(res.status_code)}")
+  return res.status_code
+ 
+ 
+ def revoke_tokens(dn):
+   auth_headers = login()
+ 
+   data = {"revocationReason": "api revocation for alert", "delayMinutes": 0}
+   res = requests.put(f"{CONTROLLER_URL}/admin/token-records/revoked/by-dn/{dn}",
+                      data=json.dumps(data), verify=CA_PATH, headers=auth_headers)
+ 
+   print(f"{dn} tokens revoked {str(res.status_code)}")
+  return res.status_code
+ 
+ 
+ if __name__ == "__main__":
+   print("========================================================")
+   print(f"Appgate SDP Alert Handler Started on {str(LISTEN_PORT)}")
+   print("========================================================")
+ 
+  with socketserver.UDPServer((LISTEN_HOST, LISTEN_PORT), SyslogHandler) as server:
+     server.serve_forever(poll_interval=0.5)
