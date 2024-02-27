@@ -7,14 +7,13 @@ Todos:
 4. GW Deployments
 5. Connector Deployments
 6. FW Rule parsing
+   - Rule Parsing Tasks
+   - Services
+   - Service Groups
+   - Do the loops an combine 
+   - Merge to rules 
+   - Export
+
 7. Move Sonicwall rules and parsing to firewall configuration project
 
 
-Rule Parsing Tasks
-Services
-Service Groups
-Do the loops an combine 
-Merge to rules 
-Export
-
-More stuff
