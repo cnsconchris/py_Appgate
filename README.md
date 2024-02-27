@@ -16,5 +16,5 @@ Service Groups
 Do the loops an combine 
 Merge to rules 
 Export
-Xreate SDP Worksheet.
+
 
