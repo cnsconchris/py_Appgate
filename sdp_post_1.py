@@ -20,11 +20,7 @@ warnings.filterwarnings("ignore", message="Unverified HTTPS request is being mad
 my_cred_info_file = '/Users/chris/code/PYTHON_TOOLS/Local/Appgate/alvaka_sdp_controller_info.json'
 my_sdp_url = "https://alv-lassdpctl01.alvaka.net:8443/admin/"
 
-
-
 my_input_file_path = '/Users/chris/OneDriveAlvakaNetworks/ALV01/DataAnalysis/Appgate/sdp_data_input_2.xlsx'
-
-
 
 my_headers = {
     'Accept': 'application/vnd.appgate.peer-v19+json',
@@ -124,6 +120,7 @@ def myf_post(my_method_call,my_payload):
     my_response = myf_url_request(my_method,my_url,my_headers,my_payload)
    
     return my_response
+
 
 def myf_put(my_method_call,my_payload,my_ent_id):
     global my_sdp_url
