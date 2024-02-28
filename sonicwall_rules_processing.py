@@ -13,6 +13,16 @@ my_input_file_dir = '/Users/chris/Library/CloudStorage/OneDrive-Personal/code_da
 my_input_file = 'alv-las-ct-fw-1_rules_current_20240225_205133.xlsx'
 my_input_file_path = my_input_file_dir + my_input_file
 
+my_output_dir = '/Users/chris/OneDriveAlvakaNetworks/ALV01/DataAnalysis/Appgate/'
+my_output_file_prefix = 'alv-las-ct-f-w-1_for_appgate_build'
+my_output_file_extension = '.xlsx'
+
+my_now = datetime.now()
+my_timestamp = my_now.strftime('%Y%m%d_%H%M%S')
+# my_output_file_path = my_output_dir + my_output_file_prefix + '_' + my_output_file_extension
+my_output_file_path = my_output_dir + my_output_file_prefix + '_' + my_timestamp + my_output_file_extension
+my_output_file_path_no_timestamp = my_output_dir + my_output_file_prefix + my_output_file_extension
+
 # Load all sheets
 # Get sheet names
 # Convert dict to list
@@ -26,11 +36,31 @@ for my_sheet_item in my_list_sheets:
 
 # Processed Firewall Policies = my_df_proc_fw_pol
 my_df_proc_fw_pol = globals()['my_df_FirewallPolicies'][
-    ['policyName', 'policySrcZone', 'policySrcNet', 'policyDstZone', 'policyDstNet', 'policyDstSvc']
+    ['policyName', 'policyComment', 'policyAction', 'policySrcZone', 'policySrcNet',
+     'policySrcSvc', 'policyDstZone', 'policyDstNet', 'policyDstSvc']
 ]
 
 # Change NAN entries to ANY
 my_df_proc_fw_pol = my_df_proc_fw_pol.fillna('ANY')
+
+
+# Function to convert Policy Action to readable.
+def myf_process_pol_action(my_pol_action_input):
+    my_pol_action_output = ''
+    if my_pol_action_input == 0:
+        my_pol_action_output = 'DENY'
+    elif my_pol_action_input == 1:
+        my_pol_action_output = 'DISCARD'
+    elif my_pol_action_input == 2:
+        my_pol_action_output = 'ALLOW'
+    else:
+        pass
+
+    return my_pol_action_output
+
+
+# Convert Policy Action to readable with function.
+my_df_proc_fw_pol['policyAction'] = my_df_proc_fw_pol['policyAction'].apply(myf_process_pol_action)
 
 # Processed Firewall Address Object Groups = my_df_proc_address_object_groups
 my_df_proc_address_object_groups = globals()['my_df_AddressObjectGroups'][
@@ -91,8 +121,8 @@ my_df_proc_address_groups_not_in_proc_address_combined = my_df_compare_temp[
 my_df_proc_address_groups_not_in_proc_address_combined['addrObjType'] = 88888
 
 # Add addObjId as for matching against rules.
-my_df_proc_address_groups_not_in_proc_address_combined['addrObjId'] = my_df_proc_address_groups_not_in_proc_address_combined[
-    'AddressName']
+my_df_proc_address_groups_not_in_proc_address_combined['addrObjId'] = (
+    my_df_proc_address_groups_not_in_proc_address_combined)['AddressName']
 
 # Add groups not in my_df_proc_address_objects, my_df_proc_address_groups_not_in_proc_address_combined, into
 # my_df_proc_address_objects.
@@ -212,7 +242,6 @@ my_df_proc_fw_pol['DstProcessedAddress'] = my_df_proc_fw_pol.apply(
  )
 
 
-
 # Services processing
 # Processed Firewall Service Objects = my_df_proc_service_objects
 # Add addObjId as for matching against rules.
@@ -265,7 +294,6 @@ my_df_service_compare_temp = pd.merge(
 #     58 = ICMPv6
 #     108 = IPCOMP
 def myf_convert_service_objects(my_row):
-    my_value = ''
     my_value_1 = 'NA'
     if my_row['svcObjType'] == 2:
         my_value = 'GROUP'
@@ -302,17 +330,16 @@ def myf_convert_service_objects(my_row):
 my_df_proc_service_combined['ProcessedProto'], my_df_proc_service_combined[
     'ProcessedService'] = zip(*my_df_proc_service_combined.apply(myf_convert_service_objects, axis=1))
 
+
 # Function to get svc group members and nonmembers with protocol and ports.
 def myf_get_service_values(my_svc_input):
     my_df_svc_info = pd.DataFrame(columns=['service', 'type', 'ports'])
+
+    # Iterate through group members of group list.
     my_df_group_members = my_df_proc_service_object_groups[my_df_proc_service_object_groups['Group'] == my_svc_input]
 
-    # print('------------------------------')
-    # print('MyGroup: ', my_svc_input)
-    # print('------------------------------')
-
+    # If service is not in a group get type and ports.
     if my_df_group_members.empty:
-        # print(my_svc_input, ' IS NOT A GROUP')
         my_df_group_member_info = my_df_proc_service_combined[my_df_proc_service_combined[
                                                                   'ServiceName'] == my_svc_input]
 
@@ -342,9 +369,9 @@ def myf_get_service_values(my_svc_input):
 
                 my_df_svc_row = pd.DataFrame({'service': [my_service], 'type': [my_type], 'ports': [my_ports]})
                 my_df_svc_info = pd.concat([my_df_svc_info, my_df_svc_row])
-    else:
-        # print(my_svc_input, ' IS A GROUP')
 
+    # If service is in a group get type and ports and check to see if it has groups inside of it.
+    else:
         for my_row_member in my_df_group_members.itertuples():
 
             my_df_group_member_info = my_df_proc_service_combined[my_df_proc_service_combined[
@@ -375,10 +402,10 @@ def myf_get_service_values(my_svc_input):
                         my_ports = 'na'
 
                     my_df_svc_row = pd.DataFrame({'service': [my_service], 'type': [my_type], 'ports': [my_ports]})
-                    my_df_svc_info = pd.concat([ my_df_svc_info, my_df_svc_row])
+                    my_df_svc_info = pd.concat([my_df_svc_info, my_df_svc_row])
 
+                # Process group inside of groups
                 elif my_row_member_info.svcObjType == 2:
-                    #print('GROUP OF GROUP: ', my_row_member_info.ServiceName)
                     my_df_sub_svc_info = myf_get_service_values(my_row_member_info.ServiceName)
                     my_df_svc_info = pd.concat([my_df_svc_info, my_df_sub_svc_info])
 
@@ -407,7 +434,7 @@ def myf_process_pol_services(my_svc):
     return my_item_svc
 
 
-# Match firewall policy destination service to service combined service df.
+# Make column and run function to match firewall policy destination service to service combined service df.
 my_df_proc_fw_pol['DstDictProcessedService'] = my_df_proc_fw_pol.apply(
      lambda row:  myf_process_pol_services(
          row['policyDstSvc']) if row['policyDstSvc'] != 'ANY' else row['policyDstSvc'], axis=1
@@ -415,7 +442,7 @@ my_df_proc_fw_pol['DstDictProcessedService'] = my_df_proc_fw_pol.apply(
 
 
 # Function to match policy services to grouped dict processed services for Appgate API.
-def myf_process_pol_groupeddictservices(my_svc):
+def myf_process_pol_grouped_dict_services(my_svc):
     my_df_svc = my_df_proc_service_combined[my_df_proc_service_combined['ServiceName'] == my_svc]
     my_item_svc = ''
     for my_row_svc in my_df_svc.itertuples():
@@ -425,23 +452,38 @@ def myf_process_pol_groupeddictservices(my_svc):
     return my_item_svc
 
 
-# Match firewall policy destination service to service combined service df dict processed services for Appgate API..
+# Make column and run function to match firewall policy destination service to
+# service combined service df dict processed services for Appgate API.
 my_df_proc_fw_pol['DstGroupedDictService'] = my_df_proc_fw_pol.apply(
-     lambda row:  myf_process_pol_groupeddictservices(
+     lambda row:  myf_process_pol_grouped_dict_services(
          row['policyDstSvc']) if row['policyDstSvc'] != 'ANY' else row['policyDstSvc'], axis=1
  )
 
 
-
-# %%
-
 # Processed Firewall Policies VPN Specific = my_df_proc_fw_pol_vpn
 my_df_proc_fw_pol_vpn = my_df_proc_fw_pol[my_df_proc_fw_pol['policySrcNet'].str.contains('ALV-LAS-CT-SSLVPN-1_')]
 
+# List of dataframes to export to excel.
+my_list_dataframes = ['my_df_AddressObjectGroups', 'my_df_AddressObjects', 'my_df_AddressObjectsFQDN',
+                      'my_df_AddressObjectsIPV6', 'my_df_FirewallPolicies', 'my_df_Interfaces', 'my_df_NATPolicies',
+                      'my_df_ServiceObjectGroups', 'my_df_ServiceObjects', 'my_df_Zones', 'my_df_compare_temp',
+                      'my_df_proc_address_combined', 'my_df_proc_address_groups',
+                      'my_df_proc_address_object_groups',
+                      'my_df_proc_address_objects', 'my_df_proc_address_objects_fqdn', 'my_df_proc_fw_pol',
+                      'my_df_proc_fw_pol_vpn', 'my_df_proc_service_combined', 'my_df_proc_service_groups',
+                      'my_df_proc_service_object_groups', 'my_df_proc_service_objects', 'my_df_service_compare_temp']
 
-# Make sure all my_df_proc_address_combined['ProcessedAddress'] are lists for formatting.
-my_df_proc_address_combined['ProcessedAddress'] = my_df_proc_address_combined[
-    'ProcessedAddress'].apply(lambda x: x if isinstance(x, list) else [x])
-
-# Make then convert list in my_df_proc_address_combined['ProcessedAddress'] to string
-my_df_proc_address_combined['ProcessedAddress'] = my_df_proc_address_combined['ProcessedAddress'].astype(str)
+# Loop through dataframes, create sheets, add to single xlsx file.
+with pd.ExcelWriter(my_output_file_path, engine='xlsxwriter') as my_xls_file:
+    print('Exporting Data Frames to:', my_output_file_path)
+    for my_item_df_name in my_list_dataframes:
+        print(my_item_df_name)
+        my_df_item = globals()[my_item_df_name]
+        my_sheet_name = my_item_df_name.replace('my_df_','')
+        my_df_item.to_excel(my_xls_file, sheet_name=my_sheet_name, startrow=1, header=False, index=False)
+        workbook = my_xls_file.book
+        worksheet = my_xls_file.sheets[my_sheet_name]
+        (max_row, max_col) = my_df_item.shape
+        column_settings = [{'header': column} for column in my_df_item.columns]
+        worksheet.add_table(0, 0, max_row, max_col - 1, {'columns': column_settings})
+        worksheet.set_column(0, max_col - 1, 12)
