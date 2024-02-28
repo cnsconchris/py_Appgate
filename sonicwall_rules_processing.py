@@ -32,22 +32,22 @@ my_df_proc_fw_pol = globals()['my_df_FirewallPolicies'][
 # Change NAN entries to ANY
 my_df_proc_fw_pol = my_df_proc_fw_pol.fillna('ANY')
 
-# Processed Firewall Address Object Groups = my_df_proc_group_objects
-my_df_proc_group_objects = globals()['my_df_AddressObjectGroups'][
+# Processed Firewall Address Object Groups = my_df_proc_address_object_groups
+my_df_proc_address_object_groups = globals()['my_df_AddressObjectGroups'][
     ['addro_grpToGrp', 'addro_atomToGrp']
 ].copy()
 
 # Add addObjId as for matching against rules.
-my_df_proc_group_objects['addrObjId'] = my_df_proc_group_objects['addro_grpToGrp']
+my_df_proc_address_object_groups['addrObjId'] = my_df_proc_address_object_groups['addro_grpToGrp']
 
 # Rename columns
-my_df_proc_group_objects.rename(
+my_df_proc_address_object_groups.rename(
     columns={'addro_grpToGrp': 'Group', 'addro_atomToGrp': 'GroupMember'}, inplace=True
 )
 
-# Unique address object groups = my_df_proc_groups
-my_df_proc_groups = pd.DataFrame()
-my_df_proc_groups['AddressName'] = my_df_proc_group_objects['Group'].unique()
+# Unique address object groups = my_df_proc_address_groups
+my_df_proc_address_groups = pd.DataFrame()
+my_df_proc_address_groups['AddressName'] = my_df_proc_address_object_groups['Group'].unique()
 
 # Processed Firewall Address Objects = my_df_proc_address_objects
 # Add addObjId as for matching against rules.
@@ -79,25 +79,25 @@ my_df_proc_address_combined = pd.concat(
 
 
 # Compare and determine groups not in my_df_proc_address_combined and
-# create my_df_proc_groups_not_in_proc_address_combined.
+# create my_df_proc_address_groups_not_in_proc_address_combined.
 my_df_compare_temp = pd.merge(
-    my_df_proc_address_combined, my_df_proc_groups, on='AddressName', how='outer', indicator=True)
+    my_df_proc_address_combined, my_df_proc_address_groups, on='AddressName', how='outer', indicator=True)
 
-my_df_proc_groups_not_in_proc_address_combined = my_df_compare_temp[
+my_df_proc_address_groups_not_in_proc_address_combined = my_df_compare_temp[
     ['AddressName']][my_df_compare_temp['_merge'] == 'right_only']
 
 # Create new column and set all entries to GROUP for merge and matching with address objects.
 # Groups imported from group list to addresses combined = 88888
-my_df_proc_groups_not_in_proc_address_combined['addrObjType'] = 88888
+my_df_proc_address_groups_not_in_proc_address_combined['addrObjType'] = 88888
 
 # Add addObjId as for matching against rules.
-my_df_proc_groups_not_in_proc_address_combined['addrObjId'] = my_df_proc_groups_not_in_proc_address_combined[
+my_df_proc_address_groups_not_in_proc_address_combined['addrObjId'] = my_df_proc_address_groups_not_in_proc_address_combined[
     'AddressName']
 
-# Add groups not in my_df_proc_address_objects, my_df_proc_groups_not_in_proc_address_combined, into
+# Add groups not in my_df_proc_address_objects, my_df_proc_address_groups_not_in_proc_address_combined, into
 # my_df_proc_address_objects.
 my_df_proc_address_combined = pd.concat(
-    [my_df_proc_address_combined, my_df_proc_groups_not_in_proc_address_combined], ignore_index=True)
+    [my_df_proc_address_combined, my_df_proc_address_groups_not_in_proc_address_combined], ignore_index=True)
 
 
 # Function to convert to friendly output based on type into new row 'ProcessedAddress'.
@@ -127,10 +127,10 @@ def myf_convert_objects(my_row):
 my_df_proc_address_combined['ProcessedAddress'] = my_df_proc_address_combined.apply(myf_convert_objects, axis=1)
 
 
-# Function to iterate through group objects, my_df_proc_group_objects, and combine each members' ProcessedAddress from
-# my_df_proc_address_combined.
+# Function to iterate through group objects, my_df_proc_address_object_groups,
+# and combine each members' ProcessedAddress from my_df_proc_address_combined.
 def myf_group_members(my_group):
-    my_df_temp = my_df_proc_group_objects[my_df_proc_group_objects['Group'] == my_group]
+    my_df_temp = my_df_proc_address_object_groups[my_df_proc_address_object_groups['Group'] == my_group]
     my_list = []
     for my_row in my_df_temp.itertuples():
         # print(my_row.Group, ' -- ', my_row.GroupMember)
@@ -180,9 +180,12 @@ my_df_proc_address_combined['ProcessedAddress'] = my_df_proc_address_combined.ap
     if row['addrObjType'] == 8 or row['addrObjType'] == 88888 else row['ProcessedAddress'], axis=1)
 
 
-# Make sure all my_df_proc_address_combined['ProcessedAddress'] are lists
+# Make sure all my_df_proc_address_combined['ProcessedAddress'] are lists for formatting.
 my_df_proc_address_combined['ProcessedAddress'] = my_df_proc_address_combined[
     'ProcessedAddress'] .apply(lambda x: x if isinstance(x, list) else [x])
+
+# Make then convert list in my_df_proc_address_combined['ProcessedAddress'] to string
+my_df_proc_address_combined['ProcessedAddress'] = my_df_proc_address_combined['ProcessedAddress'].astype(str)
 
 
 # Function to match policy addresses to processed addresses.
@@ -208,7 +211,237 @@ my_df_proc_fw_pol['DstProcessedAddress'] = my_df_proc_fw_pol.apply(
          row['policyDstNet']) if row['policyDstNet'] != 'ANY' else row['policyDstNet'], axis=1
  )
 
+
+
+# Services processing
+# Processed Firewall Service Objects = my_df_proc_service_objects
+# Add addObjId as for matching against rules.
+my_df_proc_service_objects = globals()['my_df_ServiceObjects'][
+    ['svcObjId', 'svcObjType', 'svcObjIpType', 'svcObjPort1', 'svcObjPort2']
+].copy()
+
+# Rename columns
+my_df_proc_service_objects.rename(columns={'svcObjId': 'ServiceName'}, inplace=True)
+
+# Processed Firewall Service Object Groups = my_df_proc_service_object_group
+my_df_proc_service_object_groups = globals()['my_df_ServiceObjectGroups'][
+    ['so_grpToGrp', 'so_atomToGrp']
+].copy()
+
+# Create my_df_proc_service_combined.
+my_df_proc_service_combined = my_df_proc_service_objects
+
+
+# Rename columns
+my_df_proc_service_object_groups.rename(
+    columns={'so_grpToGrp': 'Group', 'so_atomToGrp': 'GroupMember'}, inplace=True
+)
+
+# Unique service object groups = my_df_proc_service_groups
+my_df_proc_service_groups = pd.DataFrame()
+my_df_proc_service_groups['ServiceName'] = my_df_proc_service_object_groups['Group'].unique()
+
+# Compare and determine groups not in my_df_proc_service_combined and
+# create my_df_proc_service_groups_not_in_proc_service_combined.
+my_df_service_compare_temp = pd.merge(
+    my_df_proc_service_combined, my_df_proc_service_groups, on='ServiceName', how='outer', indicator=True)
+
+# No issues like the address groups.  This can be ignored.
+# my_df_proc_service_groups_not_in_proc_address_combined = my_df_service_compare_temp[
+#     ['ServiceName']][my_df_service_compare_temp['_merge'] == 'right_only']
+
+
+# Function to convert to friendly output based on type into new row 'ProcessedService'.
+# svcObjType:
+#     1 = SVC
+#     2 = GROUP
+# svcObjIpType:
+#     1 = ICMP
+#     6 = TCP
+#     17 = UDP
+#     41 = 6over4
+#     47 = GRE
+#     50 = IPSEC_ESP
+#     58 = ICMPv6
+#     108 = IPCOMP
+def myf_convert_service_objects(my_row):
+    my_value = ''
+    my_value_1 = 'NA'
+    if my_row['svcObjType'] == 2:
+        my_value = 'GROUP'
+    elif my_row['svcObjType'] == 1:
+        if my_row['svcObjPort1'] == my_row['svcObjPort2']:
+            my_value = str(my_row['svcObjPort1'])
+        else:
+            my_value = str(my_row['svcObjPort1']) + '-' + str(my_row['svcObjPort2'])
+        if my_row['svcObjIpType'] == 1:
+            my_value_1 = 'ICMP'
+        elif my_row['svcObjIpType'] == 6:
+            my_value_1 = 'TCP'
+        elif my_row['svcObjIpType'] == 17:
+            my_value_1 = 'UDP'
+        elif my_row['svcObjIpType'] == 41:
+            my_value_1 = '6over4'
+        elif my_row['svcObjIpType'] == 47:
+            my_value_1 = 'GRE'
+        elif my_row['svcObjIpType'] == 50:
+            my_value_1 = 'IPSEC_ESP'
+        elif my_row['svcObjIpType'] == 58:
+            my_value_1 = 'ICMPv6'
+        elif my_row['svcObjIpType'] == 108:
+            my_value_1 = 'IPCOMP'
+        else:
+            pass
+    else:
+        my_value = 'SOMETHING IS BROKEN WRONG OBJ TYPE'
+
+    return my_value_1, my_value
+
+
+# Create Protocol and Service Type columns
+my_df_proc_service_combined['ProcessedProto'], my_df_proc_service_combined[
+    'ProcessedService'] = zip(*my_df_proc_service_combined.apply(myf_convert_service_objects, axis=1))
+
+# Function to get svc group members and nonmembers with protocol and ports.
+def myf_get_service_values(my_svc_input):
+    my_df_svc_info = pd.DataFrame(columns=['service', 'type', 'ports'])
+    my_df_group_members = my_df_proc_service_object_groups[my_df_proc_service_object_groups['Group'] == my_svc_input]
+
+    # print('------------------------------')
+    # print('MyGroup: ', my_svc_input)
+    # print('------------------------------')
+
+    if my_df_group_members.empty:
+        # print(my_svc_input, ' IS NOT A GROUP')
+        my_df_group_member_info = my_df_proc_service_combined[my_df_proc_service_combined[
+                                                                  'ServiceName'] == my_svc_input]
+
+        for my_row_member_info in my_df_group_member_info.itertuples():
+            if my_row_member_info.svcObjType == 1:
+                my_service = my_row_member_info.ServiceName
+                my_ports = my_row_member_info.ProcessedService
+                if my_row_member_info.svcObjIpType == 1:
+                    my_type = 'icmp'
+                elif my_row_member_info.svcObjIpType == 6:
+                    my_type = 'tcp'
+                elif my_row_member_info.svcObjIpType == 17:
+                    my_type = 'udp'
+                elif my_row_member_info.svcObjIpType == 41:
+                    my_type = '6over4'
+                elif my_row_member_info.svcObjIpType == 47:
+                    my_type = 'gre'
+                elif my_row_member_info.svcObjIpType == 50:
+                    my_type = 'ipsec_esp'
+                elif my_row_member_info.svcObjIpType == 58:
+                    my_type = 'icmpv6'
+                elif my_row_member_info.svcObjIpType == 108:
+                    my_type = 'ipcomp'
+                else:
+                    my_type = 'na'
+                    my_ports = 'na'
+
+                my_df_svc_row = pd.DataFrame({'service': [my_service], 'type': [my_type], 'ports': [my_ports]})
+                my_df_svc_info = pd.concat([my_df_svc_info, my_df_svc_row])
+    else:
+        # print(my_svc_input, ' IS A GROUP')
+
+        for my_row_member in my_df_group_members.itertuples():
+
+            my_df_group_member_info = my_df_proc_service_combined[my_df_proc_service_combined[
+                                                                      'ServiceName'] == my_row_member.GroupMember]
+
+            for my_row_member_info in my_df_group_member_info.itertuples():
+                if my_row_member_info.svcObjType == 1:
+                    my_service = my_row_member_info.ServiceName
+                    my_ports = my_row_member_info.ProcessedService
+                    if my_row_member_info.svcObjIpType == 1:
+                        my_type = 'icmp'
+                    elif my_row_member_info.svcObjIpType == 6:
+                        my_type = 'tcp'
+                    elif my_row_member_info.svcObjIpType == 17:
+                        my_type = 'udp'
+                    elif my_row_member_info.svcObjIpType == 41:
+                        my_type = '6over4'
+                    elif my_row_member_info.svcObjIpType == 47:
+                        my_type = 'gre'
+                    elif my_row_member_info.svcObjIpType == 50:
+                        my_type = 'ipsec_esp'
+                    elif my_row_member_info.svcObjIpType == 58:
+                        my_type = 'icmpv6'
+                    elif my_row_member_info.svcObjIpType == 108:
+                        my_type = 'ipcomp'
+                    else:
+                        my_type = 'na'
+                        my_ports = 'na'
+
+                    my_df_svc_row = pd.DataFrame({'service': [my_service], 'type': [my_type], 'ports': [my_ports]})
+                    my_df_svc_info = pd.concat([ my_df_svc_info, my_df_svc_row])
+
+                elif my_row_member_info.svcObjType == 2:
+                    #print('GROUP OF GROUP: ', my_row_member_info.ServiceName)
+                    my_df_sub_svc_info = myf_get_service_values(my_row_member_info.ServiceName)
+                    my_df_svc_info = pd.concat([my_df_svc_info, my_df_sub_svc_info])
+
+    return my_df_svc_info
+
+
+# Update my_df_proc_service_combined with dictionary of service protocols and ports
+my_df_proc_service_combined['DictProcessedService'] = my_df_proc_service_combined.apply(
+     lambda row:  myf_get_service_values(row['ServiceName']).to_dict(orient='records'), axis=1)
+
+# Create combined values dict for Appgate API.
+my_df_proc_service_combined['GroupedDictService'] = my_df_proc_service_combined.apply(
+     lambda row:  myf_get_service_values(
+         row['ServiceName']).groupby('type', group_keys=True)['ports'].apply(
+         list).reset_index().to_dict(orient='records'), axis=1)
+
+
+# Function to match policy services to dict processed services.
+def myf_process_pol_services(my_svc):
+    my_df_svc = my_df_proc_service_combined[my_df_proc_service_combined['ServiceName'] == my_svc]
+    my_item_svc = ''
+    for my_row_svc in my_df_svc.itertuples():
+        my_item_svc = my_row_svc.DictProcessedService
+        break
+
+    return my_item_svc
+
+
+# Match firewall policy destination service to service combined service df.
+my_df_proc_fw_pol['DstDictProcessedService'] = my_df_proc_fw_pol.apply(
+     lambda row:  myf_process_pol_services(
+         row['policyDstSvc']) if row['policyDstSvc'] != 'ANY' else row['policyDstSvc'], axis=1
+ )
+
+
+# Function to match policy services to grouped dict processed services for Appgate API.
+def myf_process_pol_groupeddictservices(my_svc):
+    my_df_svc = my_df_proc_service_combined[my_df_proc_service_combined['ServiceName'] == my_svc]
+    my_item_svc = ''
+    for my_row_svc in my_df_svc.itertuples():
+        my_item_svc = my_row_svc.GroupedDictService
+        break
+
+    return my_item_svc
+
+
+# Match firewall policy destination service to service combined service df dict processed services for Appgate API..
+my_df_proc_fw_pol['DstGroupedDictService'] = my_df_proc_fw_pol.apply(
+     lambda row:  myf_process_pol_groupeddictservices(
+         row['policyDstSvc']) if row['policyDstSvc'] != 'ANY' else row['policyDstSvc'], axis=1
+ )
+
+
+
+# %%
+
 # Processed Firewall Policies VPN Specific = my_df_proc_fw_pol_vpn
 my_df_proc_fw_pol_vpn = my_df_proc_fw_pol[my_df_proc_fw_pol['policySrcNet'].str.contains('ALV-LAS-CT-SSLVPN-1_')]
 
-# Services parse
+
+# Make sure all my_df_proc_address_combined['ProcessedAddress'] are lists for formatting.
+my_df_proc_address_combined['ProcessedAddress'] = my_df_proc_address_combined[
+    'ProcessedAddress'].apply(lambda x: x if isinstance(x, list) else [x])
+
+# Make then convert list in my_df_proc_address_combined['ProcessedAddress'] to string
+my_df_proc_address_combined['ProcessedAddress'] = my_df_proc_address_combined['ProcessedAddress'].astype(str)
