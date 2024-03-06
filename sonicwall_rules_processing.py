@@ -9,6 +9,7 @@ import shutil
 import ast
 import numpy as np
 import ipaddress
+
 my_input_file_dir = '/Users/chris/Library/CloudStorage/OneDrive-Personal/code_data/sonicwall/sonicwall_cfg_parsed/'
 my_input_file = 'alv-las-ct-fw-1_rules_current_20240225_205133.xlsx'
 my_input_file_path = my_input_file_dir + my_input_file
@@ -212,7 +213,7 @@ my_df_proc_address_combined['ProcessedAddress'] = my_df_proc_address_combined.ap
 
 # Make sure all my_df_proc_address_combined['ProcessedAddress'] are lists for formatting.
 my_df_proc_address_combined['ProcessedAddress'] = my_df_proc_address_combined[
-    'ProcessedAddress'] .apply(lambda x: x if isinstance(x, list) else [x])
+    'ProcessedAddress'].apply(lambda x: x if isinstance(x, list) else [x])
 
 # Make then convert list in my_df_proc_address_combined['ProcessedAddress'] to string
 my_df_proc_address_combined['ProcessedAddress'] = my_df_proc_address_combined['ProcessedAddress'].astype(str)
@@ -479,7 +480,7 @@ with pd.ExcelWriter(my_output_file_path, engine='xlsxwriter') as my_xls_file:
     for my_item_df_name in my_list_dataframes:
         print(my_item_df_name)
         my_df_item = globals()[my_item_df_name]
-        my_sheet_name = my_item_df_name.replace('my_df_','')
+        my_sheet_name = my_item_df_name.replace('my_df_', '')
         my_df_item.to_excel(my_xls_file, sheet_name=my_sheet_name, startrow=1, header=False, index=False)
         workbook = my_xls_file.book
         worksheet = my_xls_file.sheets[my_sheet_name]
