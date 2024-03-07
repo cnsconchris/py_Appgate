@@ -130,6 +130,12 @@ my_df_proc_address_groups_not_in_proc_address_combined['addrObjId'] = (
 my_df_proc_address_combined = pd.concat(
     [my_df_proc_address_combined, my_df_proc_address_groups_not_in_proc_address_combined], ignore_index=True)
 
+# addrObjType
+#     1 = host
+#     2 = range
+#     4 = subnet
+#     8 = group
+
 
 # Function to convert to friendly output based on type into new row 'ProcessedAddress'.
 def myf_convert_objects(my_row):
