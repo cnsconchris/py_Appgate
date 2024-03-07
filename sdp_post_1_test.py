@@ -1,9 +1,9 @@
 # %%
-#Todos
-#Etitlements todos
-#riskSensitivity
-#methods
-#Tags not working
+# Todos
+# Etitlements todos
+# riskSensitivity
+# methods
+# Tags not working
 
 import requests
 import json
@@ -28,8 +28,8 @@ my_headers = {
 }
 
 
-#URL Reqest function
-def myf_url_request(my_method,my_url,my_headers,my_payload):
+# URL Request function
+def myf_url_request(my_method, my_url, my_headers, my_payload):
     print('----CALL START----')
     print('Method: ', my_method)
     print('URL:', my_url)
@@ -41,16 +41,17 @@ def myf_url_request(my_method,my_url,my_headers,my_payload):
     print('')
     return my_response
 
-#Login Function
+
+# Login Function
 def myf_url_login():
-    global my_sdp_url
-    global my_cred_info_file
-    global my_headers
-    global my_headers_auth_data
-    global my_token
-    global my_token_expires
-    global my_api_user_info
-    global my_headers_auth_data
+    # global my_sdp_url
+    # global my_cred_info_file
+    # global my_headers
+    # global my_headers_auth_data
+    # global my_token
+    # global my_token_expires
+    # global my_api_user_info
+    # global my_headers_auth_data
     my_method = "POST"
     my_method_call = "login"
     my_url = my_sdp_url+my_method_call
@@ -74,11 +75,12 @@ def myf_url_login():
 
     return my_response
 
+
 # Logout Function
 def myf_url_logout():
-    global my_sdp_url
-    global my_headers
-    global my_headers_auth_data
+    # global my_sdp_url
+    # global my_headers
+    # global my_headers_auth_data
     my_method = "POST"
     my_method_call = "authentication/logout"
     my_url = my_sdp_url+my_method_call
@@ -89,13 +91,14 @@ def myf_url_logout():
 
     return my_response
 
-#Validate
+
+# Validate
 def myf_get_entitlement_byid(my_ent_id):
-    global my_sdp_url
-    global my_headers
-    global my_headers_auth_data
-    global my_list_dfs
-    #global my_df_entitlements_byid
+    # global my_sdp_url
+    # global my_headers
+    # global my_headers_auth_data
+    # global my_list_dfs
+    # global my_df_entitlements_byid
     
     my_method = "GET"
     my_method_call = "entitlements"
@@ -104,15 +107,15 @@ def myf_get_entitlement_byid(my_ent_id):
     my_headers.update(my_headers_auth_data)
     my_response = myf_url_request(my_method,my_url,my_headers,my_payload)
    
-    #my_response_json = my_response.json()
-    #my_df_entitlement_byid = pd.DataFrame.from_dict(my_response_json['data'])
+    # my_response_json = my_response.json()
+    # my_df_entitlement_byid = pd.DataFrame.from_dict(my_response_json['data'])
     return my_response
 
 
 def myf_post(my_method_call,my_payload):
-    global my_sdp_url
-    global my_headers
-    global my_headers_auth_data
+    # global my_sdp_url
+    # global my_headers
+    # global my_headers_auth_data
     my_method = "POST"
     my_url = my_sdp_url+my_method_call
         
@@ -123,9 +126,9 @@ def myf_post(my_method_call,my_payload):
 
 
 def myf_put(my_method_call,my_payload,my_ent_id):
-    global my_sdp_url
-    global my_headers
-    global my_headers_auth_data
+    # global my_sdp_url
+    # global my_headers
+    # global my_headers_auth_data
     my_method = "PUT"
     my_url = my_sdp_url+my_method_call + '/' + my_ent_id
         
@@ -134,36 +137,29 @@ def myf_put(my_method_call,my_payload,my_ent_id):
    
     return my_response
 
-
-
-
-
-#---------- Login
+# ---------- Login
 my_response_login = myf_url_login()
 
-
-
-
-
-#Load all sheets.   Get sheet names
+# Load all sheets.   Get sheet names
 my_dict_sheets  =  pd.read_excel(my_input_file_path, sheet_name=None).keys()
-#my_df_sheets = pd.DataFrame(my_dict_sheets, columns=['SheetName'])
+# my_df_sheets = pd.DataFrame(my_dict_sheets, columns=['SheetName'])
 my_list_sheets = list(my_dict_sheets)
 
-#read entitlement actions
+# Read entitlement actions
 my_df_entitlement = pd.read_excel(my_input_file_path, sheet_name='entitlements')
 my_df_entitlement_actions = pd.read_excel(my_input_file_path, sheet_name='entitlements_actions')
 
-#my_df_distinct_input = my_df_entitlement_actions.drop_duplicates(subset=["ENTITLEMENT_id"])[["ENTITLEMENT_name"]]
-#my_df_columns_input = my_df_entitlement_actions.columns
+# my_df_distinct_input = my_df_entitlement_actions.drop_duplicates(subset=["ENTITLEMENT_id"])[["ENTITLEMENT_name"]]
+# my_df_columns_input = my_df_entitlement_actions.columns
 
 
-#function to convert column values from strings to list for dictionary output
+# Function to convert column values from strings to list for dictionary output
 def myf_convert_to_list(my_string):
     if pd.isna(my_string):
         return np.nan
     else:
         return ast.literal_eval(my_string)
+
 
 my_df_entitlement['tags'] = my_df_entitlement['tags'].apply(myf_convert_to_list)
 my_df_entitlement['conditions'] = my_df_entitlement['conditions'].apply(myf_convert_to_list)
@@ -181,13 +177,13 @@ my_df_entitlement = my_df_entitlement.fillna("")
 my_df_entitlement_actions = my_df_entitlement_actions.fillna("")
 
 
-#Used for testing of combining all dicds
-#my_dict_main = []
+# Used for testing of combining all dicts
+# my_dict_main = []
 
 for my_row in my_df_entitlement.itertuples():
     my_dict_entitlement = {}
    
-    #print('MyEntID: ', my_row.id)
+    # print('MyEntID: ', my_row.id)
    
     my_df_matched = my_df_entitlement_actions[my_df_entitlement_actions['ENTITLEMENT_name'] == my_row.name]
     my_df_matched_stripped = my_df_matched.drop(columns=['ENTITLEMENT_id', 'ENTITLEMENT_name', 'monitor', 'id', 'type', 'ASSTRING_monitor'])
@@ -198,7 +194,7 @@ for my_row in my_df_entitlement.itertuples():
     my_dict_entitlement['tags'] = my_row.tags
     my_dict_entitlement['disabled'] = my_row.disabled
     my_dict_entitlement['site'] = my_row.site
-    #my_dict_entitlement['riskSensitivity'] = my_row.riskSensitivity
+    # my_dict_entitlement['riskSensitivity'] = my_row.riskSensitivity
     my_dict_entitlement['conditionLogic'] = my_row.conditionLogic
     my_dict_entitlement['conditions'] = my_row.conditions
     my_dict_entitlement['conditionLinks'] = my_row.conditionLinks
@@ -206,21 +202,17 @@ for my_row in my_df_entitlement.itertuples():
     my_dict_entitlement['appShortcutScripts'] = my_row.appShortcutScripts
     my_dict_entitlement['actions'] = my_dict_matched_stripped 
 
-
-    
-    #print(json.dumps(my_dict_entitlement,indent='\t'))
+    # print(json.dumps(my_dict_entitlement,indent='\t'))
     
     my_payload = json.dumps(my_dict_entitlement)
     
-    #print(my_payload)
-    
-    
-    
-    #Check to see if master list has Entitity ID.
+    # print(my_payload)
+
+    # Check to see if master list has Entity ID.
     if my_row.id != "":
-        #check to see if Entity ID exists in SDP.
+        # check to see if Entity ID exists in SDP.
         myf_get_ent_byid_status_code = myf_get_entitlement_byid(my_row.id).status_code
-        if  myf_get_ent_byid_status_code == 200:
+        if myf_get_ent_byid_status_code == 200:
             my_response = myf_put('entitlements', my_payload, my_row.id)
         else:
             my_response = myf_post('entitlements', my_payload)    
@@ -229,15 +221,11 @@ for my_row in my_df_entitlement.itertuples():
     
     #print(my_response,'\n\n')
         
+    # testing
+    # my_dict_main.append(my_dict_entitlement)
 
-
-    #testing
-    #my_dict_main.append(my_dict_entitlement)
-
-
-
-#testing
-#print(json.dumps(my_dict_main,indent='\t'))
+# testing
+# print(json.dumps(my_dict_main,indent='\t'))
 
 # for my_pyload_dict in my_dict_main:
 #     print('-----------Start Payload-------------')
@@ -249,5 +237,5 @@ for my_row in my_df_entitlement.itertuples():
 
 
 
-#---------- Logout
+# ---------- Logout
 my_response_login = myf_url_logout()

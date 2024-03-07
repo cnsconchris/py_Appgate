@@ -129,8 +129,9 @@ def myf_get_token_records():
     my_headers.update(my_headers_auth_data)
     my_response = myf_url_request(my_method,my_url,my_headers,my_payload)
     my_response_json = my_response.json()
-    myf_save_json_file('oken-records', my_response.json())
+    # myf_save_json_file('token-records', my_response.json())
     return my_response
+
 
 def myf_get_token_records_dn():
     global my_sdp_url
@@ -143,8 +144,9 @@ def myf_get_token_records_dn():
     my_headers.update(my_headers_auth_data)
     my_response = myf_url_request(my_method,my_url,my_headers,my_payload)
     my_response_json = my_response.json()
-    myf_save_json_file('oken-records_dn', my_response.json())
+    # myf_save_json_file('token-records_dn', my_response.json())
     return my_response
+
 
 def myf_get_admin_messages():
     global my_sdp_url
@@ -156,8 +158,9 @@ def myf_get_admin_messages():
     my_payload = None
     my_headers.update(my_headers_auth_data)
     my_response = myf_url_request(my_method,my_url,my_headers,my_payload)
-    myf_save_json_file('admin-messages', my_response.json())
+    # myf_save_json_file('admin-messages', my_response.json())
     return my_response
+
 
 def myf_get_admin_messages_summarize():
     global my_sdp_url
@@ -169,8 +172,9 @@ def myf_get_admin_messages_summarize():
     my_payload = None
     my_headers.update(my_headers_auth_data)
     my_response = myf_url_request(my_method,my_url,my_headers,my_payload)
-    myf_save_json_file('admin-messages_summarize', my_response.json())
+    # myf_save_json_file('admin-messages_summarize', my_response.json())
     return my_response
+
 
 def myf_get_entitlements():
     global my_sdp_url
@@ -185,7 +189,7 @@ def myf_get_entitlements():
     my_payload = None
     my_headers.update(my_headers_auth_data)
     my_response = myf_url_request(my_method,my_url,my_headers,my_payload)
-    myf_save_json_file('entitlements', my_response.json())
+    # myf_save_json_file('entitlements', my_response.json())
     
     my_response_json = my_response.json()
     
@@ -221,7 +225,7 @@ def myf_get_policies():
     my_payload = None
     my_headers.update(my_headers_auth_data)
     my_response = myf_url_request(my_method,my_url,my_headers,my_payload)
-    myf_save_json_file('policies', my_response.json())
+    # myf_save_json_file('policies', my_response.json())
 
     my_response_json = my_response.json()
     my_df_policies = pd.DataFrame.from_dict(my_response_json['data'])
@@ -239,7 +243,7 @@ def myf_get_conditions():
     my_payload = None
     my_headers.update(my_headers_auth_data)
     my_response = myf_url_request(my_method,my_url,my_headers,my_payload)
-    myf_save_json_file('conditions', my_response.json())
+    # myf_save_json_file('conditions', my_response.json())
 
     my_response_json = my_response.json()
     my_df_conditions = pd.DataFrame.from_dict(my_response_json['data'])
@@ -259,7 +263,7 @@ def myf_get_claims():
     my_payload = None
     my_headers.update(my_headers_auth_data)
     my_response = myf_url_request(my_method,my_url,my_headers,my_payload)
-    myf_save_json_file('claims', my_response.json())
+    # myf_save_json_file('claims', my_response.json())
 
     my_response_json = my_response.json()
     
@@ -280,7 +284,7 @@ def myf_get_entitlement_scripts():
     my_payload = None
     my_headers.update(my_headers_auth_data)
     my_response = myf_url_request(my_method,my_url,my_headers,my_payload)
-    myf_save_json_file('entitlement_scripts', my_response.json())
+    # myf_save_json_file('entitlement_scripts', my_response.json())
 
     my_response_json = my_response.json()
     my_df_entitlement_scripts = pd.DataFrame.from_dict(my_response_json['data'])
@@ -299,7 +303,7 @@ def myf_get_criteria_scripts():
     my_payload = None
     my_headers.update(my_headers_auth_data)
     my_response = myf_url_request(my_method,my_url,my_headers,my_payload)
-    myf_save_json_file('criteria_scripts', my_response.json())
+    # myf_save_json_file('criteria_scripts', my_response.json())
 
     my_response_json = my_response.json()
     my_df_criteria_scripts = pd.DataFrame.from_dict(my_response_json['data'])
@@ -317,7 +321,7 @@ def myf_get_sites():
     my_payload = None
     my_headers.update(my_headers_auth_data)
     my_response = myf_url_request(my_method,my_url,my_headers,my_payload)
-    myf_save_json_file('sites', my_response.json())
+    # myf_save_json_file('sites', my_response.json())
 
     my_response_json = my_response.json()
     my_df_sites = pd.DataFrame.from_dict(my_response_json['data'])
@@ -335,7 +339,7 @@ def myf_get_entitlement_tags():
     my_payload = None
     my_headers.update(my_headers_auth_data)
     my_response = myf_url_request(my_method,my_url,my_headers,my_payload)
-    myf_save_json_file('entitlement_tags', my_response.json())
+    # myf_save_json_file('entitlement_tags', my_response.json())
 
     my_response_json = my_response.json()
     print(json.dumps(my_response_json,indent='\t'))
@@ -346,7 +350,7 @@ def myf_get_entitlement_tags():
 
 
 my_response_login = myf_url_login()
-#-----------------------------------------
+# -----------------------------------------
 
 my_get_entitlements_response = myf_get_entitlements()
 
@@ -361,14 +365,9 @@ my_get_criteria_scripts = myf_get_criteria_scripts()
 my_get_sites = myf_get_sites()
 
 
-
-#-----------------------------------------
+# -----------------------------------------
 my_response_logout = myf_url_logout()
 
-
-
-
-# %%
 
 with pd.ExcelWriter(my_output_file_path, engine='xlsxwriter') as my_xls_file:
     print('Exporting Data Frames to:', my_output_file_path)
