@@ -339,7 +339,7 @@ my_df_proc_service_combined['ProcessedProto'], my_df_proc_service_combined[
 
 
 # Function to get svc group members and nonmembers with protocol and ports.
-def myf_get_service_values(my_svc_input):
+def myf_get_service_values(my_svc_input, my_svc_remove_duplicates=False):
     my_df_svc_info = pd.DataFrame(columns=['service', 'type', 'ports'])
 
     # Iterate through group members of group list.
@@ -375,6 +375,7 @@ def myf_get_service_values(my_svc_input):
                     my_ports = 'na'
 
                 my_df_svc_row = pd.DataFrame({'service': [my_service], 'type': [my_type], 'ports': [my_ports]})
+
                 my_df_svc_info = pd.concat([my_df_svc_info, my_df_svc_row])
 
     # If service is in a group get type and ports and check to see if it has groups inside of it.
@@ -416,7 +417,18 @@ def myf_get_service_values(my_svc_input):
                     my_df_sub_svc_info = myf_get_service_values(my_row_member_info.ServiceName)
                     my_df_svc_info = pd.concat([my_df_svc_info, my_df_sub_svc_info])
 
+    if my_svc_remove_duplicates:
+        my_df_svc_info = my_df_svc_info.drop_duplicates(subset=['type', 'ports'])
+    else:
+        pass
+
     return my_df_svc_info
+
+
+# Since we cannot do parameters in Lambda with row, needed a new function that will drop dupes for the SDP API.
+def myf_get_service_values_no_dupes(my_svc_input):
+
+    return myf_get_service_values(my_svc_input, True)
 
 
 # Update my_df_proc_service_combined with dictionary of service protocols and ports
@@ -425,7 +437,7 @@ my_df_proc_service_combined['DictProcessedService'] = my_df_proc_service_combine
 
 # Create combined values dict for Appgate API.
 my_df_proc_service_combined['GroupedDictService'] = my_df_proc_service_combined.apply(
-     lambda row:  myf_get_service_values(
+     lambda row:  myf_get_service_values_no_dupes(
          row['ServiceName']).groupby('type', group_keys=True)['ports'].apply(
          list).reset_index().to_dict(orient='records'), axis=1)
 
@@ -479,6 +491,7 @@ my_list_dataframes = ['my_df_AddressObjectGroups', 'my_df_AddressObjects', 'my_d
                       'my_df_proc_address_objects', 'my_df_proc_address_objects_fqdn', 'my_df_proc_fw_pol',
                       'my_df_proc_fw_pol_vpn', 'my_df_proc_service_combined', 'my_df_proc_service_groups',
                       'my_df_proc_service_object_groups', 'my_df_proc_service_objects', 'my_df_service_compare_temp']
+
 
 # Loop through dataframes, create sheets, add to single xlsx file.
 with pd.ExcelWriter(my_output_file_path, engine='xlsxwriter') as my_xls_file:
