@@ -75,9 +75,9 @@ for my_row_rule in my_df_fw_pol_vpn.itertuples():
                 my_row_entitlement_subtype = my_row_actions_type + '_up'
                 if my_row_actions_type == 'icmp':
                     my_row_entitlement_types = ['0-255']
-                    my_row_entitlement_ports = ''
+                    my_row_entitlement_ports = np.nan
                 else:
-                    my_row_entitlement_types = ''
+                    my_row_entitlement_types = np.nan
                     my_row_entitlement_ports = my_df_row_action['ports'].iloc[0]
 
                 my_row_entitlements_actions_rule = [{'PolicyName': my_row_rule.policyName,
@@ -98,9 +98,9 @@ for my_row_rule in my_df_fw_pol_vpn.itertuples():
             for my_row_protocol in my_list_protocols_any:
                 if my_row_protocol == 'tcp' or my_row_protocol == 'udp':
                     my_row_entitlement_ports = ['1-65535']
-                    my_row_entitlement_types = ''
+                    my_row_entitlement_types = np.nan
                 elif my_row_protocol == 'icmp':
-                    my_row_entitlement_ports = ''
+                    my_row_entitlement_ports = np.nan
                     my_row_entitlement_types = ['0-255']
                 else:
                     print("For each protocol non ICMP TCP or UDP FOUND")
@@ -165,3 +165,75 @@ my_df_proc_entitlements['tags'] = my_df_proc_entitlements.apply(
 # Make then convert list in my_df_proc_entitlements['tags'] to string
 my_df_proc_entitlements['tags'] = my_df_proc_entitlements['tags'].astype(str)
 
+# Open up sdp data build for update
+my_input_file_path_sdp_build = ('/Users/chris/OneDriveAlvakaNetworks/ALV01/'
+                                'DataAnalysis/Appgate/alvaka_sdp_data_build_input.xlsx')
+my_output_file_path_sdp_build = ('/Users/chris/OneDriveAlvakaNetworks/ALV01/'
+                                 'DataAnalysis/Appgate/alvaka_sdp_data_build_output.xlsx')
+
+# Load all sheets.   Get sheet names
+my_dict_sheets_sdp_build = pd.read_excel(my_input_file_path_sdp_build, sheet_name=None).keys()
+my_list_sheets_sdp_build = list(my_dict_sheets_sdp_build)
+
+# Read entitlement actions
+my_df_sdp_ents_wfw_updates = pd.read_excel(my_input_file_path_sdp_build, sheet_name='entitlements')
+my_df_sdp_ents_actions_wfw_updates = pd.read_excel(my_input_file_path_sdp_build, sheet_name='entitlements_actions')
+
+
+# Prep and add defaults for update.
+my_df_sdp_entitlements_fw_update = my_df_proc_entitlements
+# Replace unsupported characters on SDP
+my_df_sdp_entitlements_fw_update['name'] = my_df_sdp_entitlements_fw_update['name'].str.replace('/', '_', regex=False)
+my_df_sdp_entitlements_fw_update['name'] = my_df_sdp_entitlements_fw_update['name'].str.replace('(', '', regex=False)
+my_df_sdp_entitlements_fw_update['name'] = my_df_sdp_entitlements_fw_update['name'].str.replace(')', '', regex=False)
+my_df_sdp_entitlements_fw_update['site'] = '8a4add9e-0e99-4bb1-949c-c9faf9a49ad4'
+my_df_sdp_entitlements_fw_update['siteName'] = 'ALV-LAS-CT'
+my_df_sdp_entitlements_fw_update['actions'] = 'READ_FROM_ENTITLEMENT_ACTIONS'
+my_df_sdp_entitlements_fw_update['conditionLogic'] = 'and'
+my_df_sdp_entitlements_fw_update['conditions'] = str(['ee7b7e6f-e904-4b4f-a5ec-b3bef040643e'])
+my_df_sdp_entitlements_fw_update['conditionLinks'] = str([])
+my_df_sdp_entitlements_fw_update['disabled'] = False
+my_df_sdp_entitlements_fw_update['appShortcuts'] = str([])
+my_df_sdp_entitlements_fw_update['appShortcutScripts'] = str([])
+
+my_df_sdp_entitlements_actions_fw_update = my_df_proc_entitlements_actions_unique
+# Replace unsupported characters on SDP
+my_df_sdp_entitlements_actions_fw_update['name'] = (
+    my_df_sdp_entitlements_actions_fw_update['name'].str.replace('/', '_', regex=False))
+my_df_sdp_entitlements_actions_fw_update['name'] = (
+    my_df_sdp_entitlements_actions_fw_update['name'].str.replace('(', '', regex=False))
+my_df_sdp_entitlements_actions_fw_update['name'] = (
+    my_df_sdp_entitlements_actions_fw_update['name'].str.replace(')', '', regex=False))
+my_df_sdp_entitlements_actions_fw_update = my_df_sdp_entitlements_actions_fw_update.rename(
+    columns={'name': 'ENTITLEMENT_name'}
+)
+
+
+# update my_df_sdp_build_entitlement
+my_list_dfs = []
+my_df_sdp_ents_wfw_updates = pd.concat([my_df_sdp_ents_wfw_updates, my_df_sdp_entitlements_fw_update])
+my_list_dfs.append('my_df_sdp_ents_wfw_updates')
+
+my_df_sdp_ents_actions_wfw_updates = pd.concat([my_df_sdp_ents_actions_wfw_updates,
+                                                my_df_sdp_entitlements_actions_fw_update])
+my_list_dfs.append('my_df_sdp_ents_actions_wfw_updates')
+
+
+with pd.ExcelWriter(my_output_file_path_sdp_build, engine='xlsxwriter', ) as my_xls_file:
+    print('Exporting Data Frames to:', my_output_file_path_sdp_build)
+    for my_item_df_name in my_list_dfs:
+        print(my_item_df_name)
+        my_df_item = globals()[my_item_df_name]
+        my_item_df_name = my_item_df_name.replace('my_df_', '')
+        my_item_df_name = my_item_df_name.replace('ents', 'entitlements')
+        my_item_df_name = my_item_df_name.replace('_wfw', '')
+        my_item_df_name = my_item_df_name.replace('_updates', '')
+        my_item_df_name = my_item_df_name.replace('sdp_', '')
+        my_sheet_name = my_item_df_name
+        my_df_item.to_excel(my_xls_file, sheet_name=my_sheet_name, startrow=1, header=False, index=False)
+        workbook = my_xls_file.book
+        worksheet = my_xls_file.sheets[my_sheet_name]
+        (max_row, max_col) = my_df_item.shape
+        column_settings = [{'header': column} for column in my_df_item.columns]
+        worksheet.add_table(0, 0, max_row, max_col - 1, {'columns': column_settings})
+        worksheet.set_column(0, max_col - 1, 12)
