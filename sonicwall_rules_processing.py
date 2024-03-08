@@ -142,7 +142,11 @@ def myf_convert_objects(my_row):
     if my_row['addrObjType'] == 1:
         my_value = my_row['addrObjIp1']
     elif my_row['addrObjType'] == 2:
-        my_value = my_row['addrObjIp1'] + '-' + my_row['addrObjIp2']
+        # my_value = my_row['addrObjIp1'] + '-' + my_row['addrObjIp2']
+        my_fvar_start = ipaddress.IPv4Address(my_row['addrObjIp1'])
+        my_fvar_end = ipaddress.IPv4Address(my_row['addrObjIp2'])
+        my_fvar_ip_list = [str(ipaddress.IPv4Address(ip)) for ip in range(int(my_fvar_start), int(my_fvar_end) + 1)]
+        my_value = my_fvar_ip_list
     elif my_row['addrObjType'] == 4:
         my_value = str(
             ipaddress.ip_network(
