@@ -13,7 +13,7 @@ from sdp_login_and_logout import my_gvar_sdp_url
 from sdp_login_and_logout import my_gvar_headers
 
 my_input_file_path = ('/Users/chris/OneDriveAlvakaNetworks/ALV01/'
-                      'DataAnalysis/Appgate/alvaka_sdp_data_build_output.xlsx')
+                      'DataAnalysis/Appgate/alvaka_sdp_data_20240319_211837.xlsx')
 
 
 # Validate

@@ -11,11 +11,11 @@ import numpy as np
 import ipaddress
 
 my_input_file_dir = '/Users/chris/Library/CloudStorage/OneDrive-Personal/code_data/sonicwall/sonicwall_cfg_parsed/'
-my_input_file = 'alv-las-ct-fw-1_rules_current_20240225_205133.xlsx'
+my_input_file = 'alv-irv-hq-fw-1_20230718_rules_20240325_162502.xlsx'
 my_input_file_path = my_input_file_dir + my_input_file
 
 my_output_dir = '/Users/chris/OneDriveAlvakaNetworks/ALV01/DataAnalysis/Appgate/'
-my_output_file_prefix = 'alv-las-ct-f-w-1_for_appgate_build'
+my_output_file_prefix = 'alv-irv-hq-fw-1_20230718_rules_20240325_162502_more'
 my_output_file_extension = '.xlsx'
 
 my_now = datetime.now()
@@ -433,7 +433,7 @@ my_df_proc_service_combined['GroupedDictService'] = my_df_proc_service_combined.
      lambda row:  myf_get_service_values(
          row['ServiceName']).drop_duplicates(subset=['type', 'ports']).groupby('type', group_keys=True)['ports'].apply(
          list).reset_index().to_dict(orient='records'), axis=1)
-# %%
+
 
 # Function to match policy services to dict processed services.
 def myf_process_pol_services(my_svc):
@@ -473,7 +473,9 @@ my_df_proc_fw_pol['DstGroupedDictService'] = my_df_proc_fw_pol.apply(
 
 
 # Processed Firewall Policies VPN Specific = my_df_proc_fw_pol_vpn
-my_df_proc_fw_pol_vpn = my_df_proc_fw_pol[my_df_proc_fw_pol['policySrcNet'].str.contains('ALV-LAS-CT-SSLVPN-1_')]
+my_df_proc_fw_pol_vpn = my_df_proc_fw_pol[
+    my_df_proc_fw_pol['policySrcNet'].str.contains('ALV-LAS-CT-SSLVPN-1_')
+    | my_df_proc_fw_pol['policySrcNet'].str.contains('ALV-LAS-CT-SDP-IP-POOL')]
 
 # List of dataframes to export to excel.
 my_list_dataframes = ['my_df_AddressObjectGroups', 'my_df_AddressObjects', 'my_df_AddressObjectsFQDN',

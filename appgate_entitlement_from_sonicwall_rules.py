@@ -12,7 +12,7 @@ import ipaddress
 import sys
 
 my_input_file_dir = '/Users/chris/OneDriveAlvakaNetworks/ALV01/DataAnalysis/Appgate/'
-my_input_file = 'alv-las-ct-f-w-1_for_appgate_build_current.xlsx'
+my_input_file = 'alv-las-ct-fw-1_20240319a_rules_20240319_174823_130423_more_20240319_181026.xlsx'
 my_input_file_path = my_input_file_dir + my_input_file
 
 # my_output_dir = '/Users/chris/OneDriveAlvakaNetworks/ALV01/DataAnalysis/Appgate/'
@@ -52,8 +52,17 @@ for my_row_rule in my_df_fw_pol_vpn.itertuples():
     if (my_row_rule.policyAction == 'ALLOW' and my_row_rule.policySrcNet.find('VPN-SUBNETS') == -1
            ):
         # Create source tag
-        my_row_entitlement_tag = 'ROLE-' + my_row_rule.policyName.replace('ALV-LAS-CT-SMAV-1_', '').split('>')[0]
-        my_row_entitlement_name = my_row_rule.policyName.split('>')[-1]
+
+        if 'ALV-LAS-CT-SMAV-1' in my_row_rule.policyName:
+            my_row_entitlement_tag = 'ALV01_ROLE-' + \
+                                     my_row_rule.policyName.replace('ALV-LAS-CT-SMAV-1_', '').split('>')[0]
+        elif 'ALV-LAS-CT-SSLVPN-1_' in my_row_rule.policyName:
+            my_row_entitlement_tag = 'ALV01_ROLE-' + \
+                                     my_row_rule.policyName.replace('ALV-LAS-CT-SSLVPN-1_', '').split('>')[0]
+        else:
+            my_row_entitlement_tag = ''
+
+        my_row_entitlement_name = 'ALV01_' + my_row_rule.policyName.split('>')[-1]
         my_row_entitlement_type = 'IpAccess'
         my_row_entitlement_action = 'allow'
 
@@ -156,6 +165,8 @@ def myf_entitlement_tags(my_ent_name):
 
     # Remove Duplicates
     my_list = list(set(my_list))
+    # Remove bland values
+    my_list = [item for item in my_list if item != '']
     return my_list
 
 
@@ -169,7 +180,7 @@ my_df_proc_entitlements['tags'] = my_df_proc_entitlements['tags'].astype(str)
 my_input_file_path_sdp_build = ('/Users/chris/OneDriveAlvakaNetworks/ALV01/'
                                 'DataAnalysis/Appgate/alvaka_sdp_data_build_input.xlsx')
 my_output_file_path_sdp_build = ('/Users/chris/OneDriveAlvakaNetworks/ALV01/'
-                                 'DataAnalysis/Appgate/alvaka_sdp_data_build_output.xlsx')
+                                 'DataAnalysis/Appgate/alvaka_sdp_data_build_output2.xlsx')
 
 # Load all sheets.   Get sheet names
 my_dict_sheets_sdp_build = pd.read_excel(my_input_file_path_sdp_build, sheet_name=None).keys()
@@ -218,6 +229,7 @@ my_df_sdp_ents_actions_wfw_updates = pd.concat([my_df_sdp_ents_actions_wfw_updat
                                                 my_df_sdp_entitlements_actions_fw_update])
 my_list_dfs.append('my_df_sdp_ents_actions_wfw_updates')
 
+# %%
 
 with pd.ExcelWriter(my_output_file_path_sdp_build, engine='xlsxwriter', ) as my_xls_file:
     print('Exporting Data Frames to:', my_output_file_path_sdp_build)

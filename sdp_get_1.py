@@ -358,7 +358,7 @@ my_get_policies_response = myf_get_policies()
 
 my_get_conditions_response = myf_get_conditions()
 
-#my_get_entitlement_scripts = myf_get_entitlement_scripts()
+my_get_entitlement_scripts = myf_get_entitlement_scripts()
 
 my_get_criteria_scripts = myf_get_criteria_scripts()
 
