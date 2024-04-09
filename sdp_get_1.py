@@ -232,7 +232,7 @@ def myf_get_policies():
     my_list_dfs.append('my_df_policies')
     
 def myf_get_conditions():
-    global my_sdp_url
+    global my_sdp_urlb
     global my_headers
     global my_headers_auth_data
     global my_list_dfs
@@ -327,6 +327,7 @@ def myf_get_sites():
     my_df_sites = pd.DataFrame.from_dict(my_response_json['data'])
     my_list_dfs.append('my_df_sites')
 
+
 def myf_get_entitlement_tags():
     global my_sdp_url
     global my_headers
@@ -344,30 +345,57 @@ def myf_get_entitlement_tags():
     my_response_json = my_response.json()
     print(json.dumps(my_response_json,indent='\t'))
     my_df_entitlement_tags = pd.DataFrame.from_dict(my_response_json)
-    #my_list_dfs.append('my_df_entitlement_tags')
+    # my_list_dfs.append('my_df_entitlement_tags')
 
 
+def myf_get_all_user_licenses():
+    global my_sdp_url
+    global my_headers
+    global my_headers_auth_data
+    global my_list_dfs
+    global my_sdp_url
+    global my_headers
+    global my_headers_auth_data
+    global my_list_dfs
+    global my_df_all_user_licenses
+    my_method = "GET"
+    my_method_call = "license/users"
+    my_url = my_sdp_url + my_method_call
+    my_payload = None
+    my_headers.update(my_headers_auth_data)
+    my_params = my_xp
+    my_response = myf_url_request(my_method, my_url, my_headers,  my_payload)
+    # myf_save_json_file('all_user_licenses', my_response.json())
+
+    my_response_json = my_response.json()
+    print(json.dumps(my_response_json, indent='\t'))
+    my_df_all_user_licenses = pd.DataFrame.from_dict(my_response_json['data'])
+    #my_list_dfs.append('my_df_all_user_licenses')
 
 
 my_response_login = myf_url_login()
 # -----------------------------------------
 
-my_get_entitlements_response = myf_get_entitlements()
+# my_get_entitlements_response = myf_get_entitlements()
+#
+# my_get_policies_response = myf_get_policies()
+#
+# my_get_conditions_response = myf_get_conditions()
+#
+# my_get_entitlement_scripts = myf_get_entitlement_scripts()
+#
+# my_get_criteria_scripts = myf_get_criteria_scripts()
+#
+# my_get_sites = myf_get_sites()
 
-my_get_policies_response = myf_get_policies()
-
-my_get_conditions_response = myf_get_conditions()
-
-my_get_entitlement_scripts = myf_get_entitlement_scripts()
-
-my_get_criteria_scripts = myf_get_criteria_scripts()
-
-my_get_sites = myf_get_sites()
+my_get_all_user_licenses = myf_get_all_user_licenses()
 
 
 # -----------------------------------------
 my_response_logout = myf_url_logout()
 
+
+# %%
 
 with pd.ExcelWriter(my_output_file_path, engine='xlsxwriter') as my_xls_file:
     print('Exporting Data Frames to:', my_output_file_path)
